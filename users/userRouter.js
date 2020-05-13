@@ -11,7 +11,7 @@ router.use((req, res, next) => {
 });
 
 
-router.post('/', requiredBody, (req, res) => {
+router.post('/', validateUser, requiredBody, (req, res) => {
   User.insert(req.body)
   .then(user => {
     res.status(200).json(user);
@@ -24,7 +24,7 @@ router.post('/', requiredBody, (req, res) => {
   });
 });
 
-router.post('/:id/posts',  [validateUserId, validatePost ,requiredBody],  async (req, res) => {
+router.post('/:id/posts',  [ validateUserId, validatePost ,requiredBody],  async (req, res) => {
   const postInfo = { ...req.body, user_id: req.params.id}
   try {
     const post = await User.add(postInfo);
@@ -37,17 +37,17 @@ router.post('/:id/posts',  [validateUserId, validatePost ,requiredBody],  async 
   
 });
 
-router.get('/', validateUser, getHandler);
+router.get('/',  getHandler);
 
-router.get('/:id', validateUserId, (req, res) => {
+router.get('/:id',  validateUserId, (req, res) => {
   res.status(200).json(req.user);
 });
 
-router.get('/:id/posts', validatePost, (req, res) => {
+router.get('/:id/posts',  validatePost, (req, res) => {
   res.status(200).json(req.userPost);
 });
 
-router.delete('/:id', validateUserId, (req, res) => {
+router.delete('/:id',  validateUserId, (req, res) => {
   User.remove(req.params.id)
   .then(user => {
     if (user > 0) {
@@ -62,7 +62,7 @@ router.delete('/:id', validateUserId, (req, res) => {
   })
 });
 
-router.put('/:id', [validateUserId, requiredBody] ,(req, res) => {
+router.put('/:id', [validateUser,validateUserId, requiredBody] ,(req, res) => {
   User.update(req.params.id, req.body)
   .then(user => {
     if (user) {
@@ -87,7 +87,7 @@ function validateUserId(req, res, next) {
       req.user = user;
       next()
     } else {
-      next(new Error('does not exist ya foo! '));
+      next(new Error( "invalid user id" ));
     }
   })
   .catch(err => {
@@ -97,20 +97,11 @@ function validateUserId(req, res, next) {
 }
 
 function validateUser(req, res, next) {
-  const name = req.body;
-  User.get(name)
-  .then( user => {
-    if(user){
-      req.user = user
-      next()
+  if (req.body.name) { 
+    next()
     } else {
-      next(new Error('No user found'))
+      res.status(400).json({message: 'missing required name field'})
     }
-  })
-  .catch( err => {
-    console.log(err);
-    res.status(500).json({message: ' exception ' , err})
-  })
 }
 
 function validatePost(req, res, next) {
@@ -121,7 +112,7 @@ function validatePost(req, res, next) {
       req.userPost = userPost;
       next()
     } else {
-      next(new Error('does not exist ya foo! '));
+      next(new Error( "missing post data"  ));
     }
   })
   .catch(err => {
