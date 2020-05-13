@@ -7,6 +7,7 @@ module.exports = {
   insert,
   update,
   remove,
+  add,
 };
 
 function get() {
@@ -24,6 +25,14 @@ function getUserPosts(userId) {
     .join('users as u', 'u.id', 'p.user_id')
     .select('p.id', 'p.text', 'u.name as postedBy')
     .where('p.user_id', userId);
+}
+
+function add(post) {
+  return db('posts')
+    .insert(post)
+    .then(ids => {
+      return getById(ids[0]);
+    });
 }
 
 function insert(user) {
