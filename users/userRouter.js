@@ -37,7 +37,7 @@ router.post('/:id/posts',  [validateUserId, validatePost ,requiredBody],  async 
   
 });
 
-router.get('/', getHandler);
+router.get('/', validateUser, getHandler);
 
 router.get('/:id', validateUserId, (req, res) => {
   res.status(200).json(req.user);
@@ -47,7 +47,7 @@ router.get('/:id/posts', validatePost, (req, res) => {
   res.status(200).json(req.userPost);
 });
 
-router.delete('/:id',  validateUserId, (req, res) => {
+router.delete('/:id', validateUserId, (req, res) => {
   User.remove(req.params.id)
   .then(user => {
     if (user > 0) {
@@ -97,7 +97,20 @@ function validateUserId(req, res, next) {
 }
 
 function validateUser(req, res, next) {
-  // do your magic!
+  const name = req.body;
+  User.get(name)
+  .then( user => {
+    if(user){
+      req.user = user
+      next()
+    } else {
+      next(new Error('No user found'))
+    }
+  })
+  .catch( err => {
+    console.log(err);
+    res.status(500).json({message: ' exception ' , err})
+  })
 }
 
 function validatePost(req, res, next) {
