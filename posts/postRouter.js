@@ -69,7 +69,8 @@ function validatePostId(req, res, next) {
 function getHandler(req, res) {
   Post.get(req.query)
     .then(post => {
-      res.status(200).json(post);
+      const messageOfTheDay = process.env.MOTD || 'Hello World!';
+      res.status(200).json({ motd: messageOfTheDay, post });
     })
     .catch(error => {
       // log error to server
